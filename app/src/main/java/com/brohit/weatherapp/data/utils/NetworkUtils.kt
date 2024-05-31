@@ -23,7 +23,7 @@ fun <T> Response<T>.checkAndGetBody(): T {
 }
 
 
-inline fun <T, R> T.runCatchingCustom(block: (OpenWeatherRepositoryImpl) -> Unit): Result<R> {
+inline fun <T, R> T.runCatchingCustom(block: () -> R): Result<R> {
     return try {
         val value = block()
         Result.success(value)

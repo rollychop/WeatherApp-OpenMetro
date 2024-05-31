@@ -71,7 +71,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    private fun providesOkHttpClient(): OkHttpClient {
+     fun providesOkHttpClient(): OkHttpClient {
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BODY
         val okHttpClient = OkHttpClient.Builder()

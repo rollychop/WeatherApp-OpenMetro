@@ -17,4 +17,8 @@ interface KeyValueDao {
     @Query("DELETE FROM key_value_table")
     fun clear()
 
+    @Query("DELETE FROM key_value_table WHERE `key` = :key")
+    fun remove(key: String)
+
+
 }

@@ -1,14 +1,16 @@
 package com.brohit.weatherapp.data.location
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
-import android.util.Log
 import androidx.core.content.ContextCompat
+import com.brohit.weatherapp.domain.location.LocationException
 import com.brohit.weatherapp.domain.location.LocationTracker
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
@@ -23,35 +25,37 @@ class DefaultLocationTracker @Inject constructor(
         private const val TAG = "DefaultLocationTracker"
     }
 
-    override suspend fun getCurrentLocation(): Location? {
-        val hasAccessFineLocationPermission = ContextCompat.checkSelfPermission(
+    override fun hasLocationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            application,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(
             application,
             Manifest.permission.ACCESS_FINE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED
-        val hasAccessCoarseLocationPermission = ContextCompat.checkSelfPermission(
-            application,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+    }
 
+    override fun isGpsEnabled(): Boolean {
         val locationManager =
             application.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        return isGpsEnabled
+    }
 
-        if (!(hasAccessCoarseLocationPermission || hasAccessFineLocationPermission) || !isGpsEnabled) {
-            return null
-        }
-
+    @SuppressLint("MissingPermission")
+    override suspend fun getCurrentLocation(): Location? {
+        if (!hasLocationPermission()) throw LocationException.LocationPermissionDeniedException()
+        if (!isGpsEnabled()) throw LocationException.GPSDisabledException()
         return suspendCancellableCoroutine { cont ->
-            locationClient.lastLocation.apply {
-                if (isComplete) {
-                    if (isSuccessful) {
-                        cont.resume(result)
-                    } else {
-                        cont.resume(null)
-                    }
-                    return@suspendCancellableCoroutine
+            locationClient.getCurrentLocation(
+                CurrentLocationRequest.Builder()
+                    .setMaxUpdateAgeMillis(1000)
+                    .build(), null
+            ).apply {
+                if (isSuccessful) {
+                    cont.resume(result)
                 }
                 addOnSuccessListener {
                     cont.resume(it)

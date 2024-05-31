@@ -88,11 +88,15 @@ dependencies {
     implementation(libs.okhttpLogging)
     implementation(libs.hiltNavigation)
 
+    implementation(libs.lottie.compose)
+
 
     //room db
     implementation(libs.room)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
+
+    implementation (libs.open.meteo.api.kotlin)
 
 
 

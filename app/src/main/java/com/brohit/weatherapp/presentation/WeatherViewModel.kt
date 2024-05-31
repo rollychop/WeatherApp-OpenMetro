@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.brohit.weatherapp.domain.location.LocationTracker
+import com.brohit.weatherapp.domain.location.LocationException
 import com.brohit.weatherapp.domain.repository.WeatherRepository
 import com.brohit.weatherapp.domain.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,22 +16,36 @@ import javax.inject.Inject
 
 
 sealed class WeatherAction {
-    class Load(val lat: Double, val lon: Double) : WeatherAction()
+    class Load(
+        val lat: Double,
+        val lon: Double,
+        val address: String
+    ) : WeatherAction()
+
+    data object TriggerSearch : WeatherAction()
+    data object CloseSearch : WeatherAction()
     data class SearchQuery(val query: String) : WeatherAction()
     data object CanLoadFromGeoLocation : WeatherAction()
+
+    data object SearchWithMyLocation : WeatherAction()
+    data object Reload : WeatherAction()
 }
 
+
+enum class ErrorType {
+    NO_LOCATION_PERMISSION,
+    NO_GPS
+}
 
 data class SearchCityState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val cities: List<Triple<String, Double, Double>> = emptyList()
+    val cities: List<Triple<String, Double, Double>> = emptyList(),
 )
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    private val repository: WeatherRepository,
-    private val locationTracker: LocationTracker
+    private val repository: WeatherRepository
 ) : ViewModel() {
 
     var state by mutableStateOf(WeatherState())
@@ -42,54 +56,63 @@ class WeatherViewModel @Inject constructor(
     var searchQuery by mutableStateOf("")
         private set
 
+    var triggerSearch by mutableStateOf(false)
+        private set
+
     private fun initLoading() {
         viewModelScope.launch {
             state = state.copy(
                 isLoading = true,
                 error = null
             )
-            val (lat, lon) = locationTracker.getCurrentLocation()?.run { latitude to longitude }
-                ?: run {
-                    val myIpGeoLocation = repository.getMyIpGeoLocation()
-                    if ((myIpGeoLocation is Resource.Success && myIpGeoLocation.data != null)) {
-                        myIpGeoLocation.data
-                    } else {
-                        90.0 to 23.0
+            val result = repository.getCurrentLocation()
+            val (lat, lon, address) = result.getOrNull() ?: kotlin.run {
+                state = state.copy(
+                    isLoading = false,
+                    error = result.exceptionOrNull()?.message ?: "Please Search for location",
+                    errorType = when (result.exceptionOrNull()) {
+                        is LocationException.LocationPermissionDeniedException -> ErrorType.NO_LOCATION_PERMISSION
+                        is LocationException.GPSDisabledException -> ErrorType.NO_GPS
+                        else -> null
                     }
-                }
+                )
+                triggerSearch = true
+                return@launch
+            }
             state = state.copy(
                 isLoading = false,
                 error = null
             )
-            loadWeatherInfo(lat, lon)
+            loadWeatherInfo(lat, lon, address)
+            searchQuery = address
         }
     }
 
-    private fun loadWeatherInfo(lat: Double, lon: Double) {
+    private fun loadWeatherInfo(lat: Double, lon: Double, address: String) {
         viewModelScope.launch {
             state = state.copy(
                 isLoading = true,
                 error = null
             )
-            when (val result = repository.getWeatherData(lat, lon)) {
-                is Resource.Success -> {
+            repository.getWeatherData(lat, lon, address).fold(
+                onSuccess = {
                     state = state.copy(
-                        weatherInfo = result.data,
+                        weatherInfo = it,
                         isLoading = false,
                         error = null
                     )
-                }
+                },
 
-                is Resource.Error -> {
+                onFailure = {
                     state = state.copy(
                         weatherInfo = null,
                         isLoading = false,
-                        error = result.message
+                        error = it.message
                     )
-                }
-            }
+                })
         }
     }
+
 
     private var searchJob: Job? = null
     private fun onSearchQueryChange(query: String) {
@@ -124,11 +147,11 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-
     fun handleAction(action: WeatherAction) {
         when (action) {
             is WeatherAction.Load -> {
-                loadWeatherInfo(action.lat, action.lon)
+                loadWeatherInfo(action.lat, action.lon, action.address)
+                searchQuery = action.address
             }
 
             is WeatherAction.SearchQuery -> {
@@ -136,6 +159,49 @@ class WeatherViewModel @Inject constructor(
             }
 
             WeatherAction.CanLoadFromGeoLocation -> {
+                initLoading()
+            }
+
+            WeatherAction.CloseSearch -> {
+                triggerSearch = false
+            }
+
+            WeatherAction.TriggerSearch -> {
+                triggerSearch = true
+            }
+
+            WeatherAction.SearchWithMyLocation -> {
+                viewModelScope.launch {
+                    state = state.copy(
+                        isLoading = true,
+                        error = null
+                    )
+                    repository.searchWithGps().fold(
+                        onSuccess = { (it, add) ->
+                            state = state.copy(
+                                weatherInfo = it,
+                                isLoading = false,
+                                error = null
+                            )
+                            searchQuery = add
+                        },
+
+                        onFailure = {
+                            state = state.copy(
+                                weatherInfo = null,
+                                isLoading = false,
+                                error = it.message,
+                                errorType = when (it) {
+                                    is LocationException.LocationPermissionDeniedException -> ErrorType.NO_LOCATION_PERMISSION
+                                    is LocationException.GPSDisabledException -> ErrorType.NO_GPS
+                                    else -> null
+                                }
+                            )
+                        })
+                }
+            }
+
+            WeatherAction.Reload -> {
                 initLoading()
             }
         }

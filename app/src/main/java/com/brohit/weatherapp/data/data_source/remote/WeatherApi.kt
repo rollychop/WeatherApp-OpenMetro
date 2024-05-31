@@ -28,9 +28,8 @@ interface WeatherApi {
     ): Response<JsonElement>
 
 
-
     @GET
     suspend fun getMyIpDetails(
         @Url url: String
-    ):Response<String>
+    ): Response<String>
 }

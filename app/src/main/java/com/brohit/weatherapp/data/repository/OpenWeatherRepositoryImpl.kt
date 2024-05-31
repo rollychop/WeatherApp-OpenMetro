@@ -11,13 +11,13 @@ import com.brohit.weatherapp.domain.weather.WeatherModel
 class OpenWeatherRepositoryImpl(
     private val weatherService: WeatherService
 ) : OpenWeatherRepository {
-    override suspend fun searchCity(cityName: String): Result<List<GeoCityModel>> {
-        return runCatchingCustom {
-            weatherService.getGeoLocation(cityName).checkAndGetBody().map { it.toModel() }
-        }
-    }
+    /*   override suspend fun searchCity(cityName: String): Result<List<GeoCityModel>> {
+           return runCatchingCustom {
+               weatherService.getGeoLocation(cityName).checkAndGetBody().map { it.toModel() }
+           }
+       }*/
 
-    override suspend fun getWeather(lat: Double, lon: Double): Result<WeatherModel> {
+    override suspend fun getOpenWeather(lat: Double, lon: Double): Result<WeatherModel> {
         return runCatchingCustom {
             weatherService.getWeather(lat, lon).checkAndGetBody().toModel()
         }
