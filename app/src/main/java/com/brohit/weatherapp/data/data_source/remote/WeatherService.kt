@@ -1,5 +1,8 @@
 package com.brohit.weatherapp.data.data_source.remote
 
+import com.brohit.weatherapp.data.data_source.remote.dto.CityGeoDto
+import com.brohit.weatherapp.data.data_source.remote.dto.OpenWeatherDto
+import com.brohit.weatherapp.data.data_source.remote.dto.ZipGeoDto
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query

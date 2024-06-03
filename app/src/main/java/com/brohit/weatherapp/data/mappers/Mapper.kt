@@ -5,9 +5,9 @@ import androidx.core.graphics.alpha
 import androidx.core.graphics.blue
 import androidx.core.graphics.green
 import androidx.core.graphics.red
-import com.brohit.weatherapp.data.data_source.remote.CityGeoDto
-import com.brohit.weatherapp.data.data_source.remote.OpenWeatherDto
-import com.brohit.weatherapp.data.data_source.remote.Weather1Dto
+import com.brohit.weatherapp.data.data_source.remote.dto.CityGeoDto
+import com.brohit.weatherapp.data.data_source.remote.dto.OpenWeatherDto
+import com.brohit.weatherapp.data.data_source.remote.dto.Weather1Dto
 import com.brohit.weatherapp.domain.weather.CloudsModel
 import com.brohit.weatherapp.domain.weather.CoordModel
 import com.brohit.weatherapp.domain.weather.GeoCityModel

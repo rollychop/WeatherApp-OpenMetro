@@ -1,7 +1,7 @@
 package com.brohit.weatherapp.data.mappers
 
-import com.brohit.weatherapp.data.data_source.remote.WeatherDataDto
-import com.brohit.weatherapp.data.data_source.remote.WeatherDto
+import com.brohit.weatherapp.data.data_source.remote.dto.WeatherDataDto
+import com.brohit.weatherapp.data.data_source.remote.dto.WeatherDto
 import com.brohit.weatherapp.domain.weather.WeatherData
 import com.brohit.weatherapp.domain.weather.WeatherInfo
 import com.brohit.weatherapp.domain.weather.WeatherType

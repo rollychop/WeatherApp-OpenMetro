@@ -1,5 +1,6 @@
 package com.brohit.weatherapp.data.data_source.remote
 
+import com.brohit.weatherapp.data.data_source.remote.dto.WeatherDto
 import com.google.gson.JsonElement
 import okhttp3.RequestBody
 import retrofit2.Response

@@ -1,4 +1,4 @@
-package com.brohit.weatherapp.data.data_source.remote
+package com.brohit.weatherapp.data.data_source.remote.dto
 
 data class ZipGeoDto(
     val zip: String,

@@ -181,6 +181,7 @@ class WeatherRepositoryImpl @Inject constructor(
 
         }
 
+    @Suppress("DEPRECATION")
     private suspend fun Location.cityName(): String {
         return suspendCoroutine { cont ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

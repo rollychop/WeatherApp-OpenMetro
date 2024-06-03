@@ -1,8 +1,6 @@
 package com.brohit.weatherapp.presentation
 
-import android.content.Context
 import android.content.Intent
-import android.location.LocationManager
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.animation.AnimatedVisibility
@@ -56,17 +54,6 @@ import com.brohit.weatherapp.presentation.component.LottieAnimationItem
 import com.brohit.weatherapp.presentation.ui.theme.DeepBlue
 import com.brohit.weatherapp.presentation.ui.theme.WeatherAppTheme
 
-@Composable
-fun CheckGPSStatus(onGPSStatusChanged: (Boolean) -> Unit) {
-    val context = LocalContext.current
-    LaunchedEffect(key1 = context) {
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        onGPSStatusChanged(
-            (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                    || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-        )
-    }
-}
 
 @Composable
 fun MyApp(
